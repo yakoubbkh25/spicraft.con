@@ -99,7 +99,58 @@
     to{transform:translateY(-110vh) rotate(90deg);opacity:0;}
   }
   .view{width:100%;max-width:920px;position:relative;z-index:1;}
+  #statsView{display:none;color:#fff;}
   #rulesView{display:none;color:#fff;}
+  .stat-box{
+    background:#1c1c1c;
+    border-radius:14px;
+    padding:24px;
+    text-align:center;
+    margin-bottom:16px;
+  }
+  .stat-status{
+    font-size:34px;
+    font-weight:800;
+    margin-bottom:6px;
+  }
+  .stat-status.online{color:#3fd06b;}
+  .stat-status.offline{color:#e05555;}
+  .stat-status.loading{color:#9a9a9a;}
+  .stat-sub{font-size:14px;color:#9a9a9a;}
+  .stat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-bottom:16px;
+  }
+  .stat-mini{
+    background:#1c1c1c;
+    border-radius:14px;
+    padding:18px;
+    text-align:center;
+  }
+  .stat-mini .num{font-size:24px;font-weight:800;}
+  .stat-mini .lbl{font-size:12px;color:#9a9a9a;margin-top:4px;}
+  .stat-refresh{
+    display:block;
+    width:100%;
+    background:#1c1c1c;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:12px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .stat-refresh:hover{background:#272727;}
+  .stat-lastchecked{
+    text-align:center;
+    font-size:12.5px;
+    color:#777;
+    margin-top:14px;
+  }
   #addServerView{display:none;}
   .mc-panel{
     position:relative;z-index:1;
@@ -247,6 +298,7 @@
   .rules-cell .big{font-size:26px;font-weight:800;text-shadow:0 2px 6px rgba(0,0,0,0.4);}
   .rules-cell .small{font-size:13px;color:#d0d0d0;display:flex;align-items:center;gap:6px;text-shadow:0 2px 6px rgba(0,0,0,0.4);}
   .rules-cell .dot{width:7px;height:7px;border-radius:50%;background:#3fd06b;display:inline-block;}
+  #statsDot{width:7px;height:7px;border-radius:50%;background:#9a9a9a;display:inline-block;margin-right:2px;}
 
   /* How to join wide card */
   .join-cell{
@@ -408,10 +460,10 @@
       <div class="small"><span class="dot"></span>Server Rules</div>
     </button>
 
-    <button class="card stats-cell" onclick="showToast('Coming soon')">
+    <button class="card stats-cell" onclick="showStats()">
       <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
       <div class="big">Stats</div>
-      <div class="small">Coming soon</div>
+      <div class="small">Server Status</div>
     </button>
 
     <div class="card join-cell">
@@ -420,7 +472,8 @@
       <div class="field-box"><span>SPI Community</span></div>
       <div class="field-label">Server Address</div>
       <div class="field-box">
-        <span>Coming soon</span>
+        <span>spicraft.funserver.top</span>
+        <button onclick="copyIP()">Copy</button>
       </div>
     </div>
 
@@ -479,6 +532,37 @@
   </div>
 </div>
 
+<div class="view" id="statsView">
+  <button class="back" onclick="showHome()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back
+  </button>
+
+  <div class="rheader">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+    <h1>Server Stats</h1>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-status loading" id="statStatus">Checking...</div>
+    <div class="stat-sub">spicraft.funserver.top</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-mini">
+      <div class="num" id="statPlayers">—</div>
+      <div class="lbl">Players Online</div>
+    </div>
+    <div class="stat-mini">
+      <div class="num" id="statMax">—</div>
+      <div class="lbl">Max Players</div>
+    </div>
+  </div>
+
+  <button class="stat-refresh" onclick="fetchStats()">Refresh</button>
+  <div class="stat-lastchecked" id="statLastChecked"></div>
+</div>
+
 <div class="view" id="addServerView" style="display:none;justify-content:center;">
   <div class="mc-panel">
     <div class="mc-title">Edit Server Info</div>
@@ -493,7 +577,7 @@
         </div>
         <div>
           <div class="mc-label">Server Address</div>
-          <div class="mc-input mc-coming">Coming soon</div>
+          <div class="mc-input">spicraft.funserver.top</div>
         </div>
       </div>
     </div>
@@ -526,6 +610,48 @@
   }
 })();
 
+function copyIP(){
+  navigator.clipboard.writeText('spicraft.funserver.top').then(()=>{
+    showToast('Copied!');
+  });
+}
+
+function fetchStats(){
+  const status = document.getElementById('statStatus');
+  const players = document.getElementById('statPlayers');
+  const max = document.getElementById('statMax');
+  const lastChecked = document.getElementById('statLastChecked');
+
+  status.textContent = 'Checking...';
+  status.className = 'stat-status loading';
+  players.textContent = '—';
+  max.textContent = '—';
+
+  fetch('https://api.mcstatus.io/v2/status/java/spicraft.funserver.top')
+    .then(r => r.json())
+    .then(data => {
+      if(data.online){
+        status.textContent = 'ONLINE';
+        status.className = 'stat-status online';
+        players.textContent = (data.players && typeof data.players.online === 'number') ? data.players.online : '0';
+        max.textContent = (data.players && typeof data.players.max === 'number') ? data.players.max : '—';
+      } else {
+        status.textContent = 'OFFLINE';
+        status.className = 'stat-status offline';
+        players.textContent = '0';
+        max.textContent = '—';
+      }
+      lastChecked.textContent = 'Last checked: ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    })
+    .catch(() => {
+      status.textContent = 'UNKNOWN';
+      status.className = 'stat-status offline';
+      players.textContent = '—';
+      max.textContent = '—';
+      lastChecked.textContent = 'Last checked: ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) + ' (error)';
+    });
+}
+
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;
@@ -537,6 +663,12 @@ function showRules(){
   document.getElementById('rulesView').style.display='block';
   window.scrollTo(0,0);
 }
+function showStats(){
+  document.getElementById('homeView').style.display='none';
+  document.getElementById('statsView').style.display='block';
+  window.scrollTo(0,0);
+  fetchStats();
+}
 function showAddServer(){
   document.getElementById('homeView').style.display='none';
   document.getElementById('addServerView').style.display='flex';
@@ -544,6 +676,7 @@ function showAddServer(){
 }
 function showHome(){
   document.getElementById('rulesView').style.display='none';
+  document.getElementById('statsView').style.display='none';
   document.getElementById('addServerView').style.display='none';
   document.getElementById('homeView').style.display='block';
   window.scrollTo(0,0);
