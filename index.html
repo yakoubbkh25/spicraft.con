@@ -667,7 +667,7 @@
       <div class="field-box"><span>SPI Community</span></div>
       <div class="field-label">Server Address</div>
       <div class="field-box">
-        <span>spicraft.funserver.top</span>
+        <span>play.spicraft.2bd.net:25627</span>
         <button onclick="copyIP()">Copy</button>
       </div>
     </div>
@@ -766,7 +766,7 @@
 
   <div class="stat-box">
     <div class="stat-status loading" id="statStatus">Checking...</div>
-    <div class="stat-sub">spicraft.funserver.top</div>
+    <div class="stat-sub">play.spicraft.2bd.net:25627</div>
   </div>
 
   <div class="stat-grid">
@@ -805,7 +805,7 @@
         </div>
         <div>
           <div class="mc-label">Server Address</div>
-          <div class="mc-input">spicraft.funserver.top</div>
+          <div class="mc-input">play.spicraft.2bd.net:25627</div>
         </div>
       </div>
     </div>
@@ -828,7 +828,7 @@
 
 <script>
 function copyIP(){
-  navigator.clipboard.writeText('spicraft.funserver.top').then(()=>{
+  navigator.clipboard.writeText('play.spicraft.2bd.net:25627').then(()=>{
     showToast('Copied!');
   });
 }
@@ -846,7 +846,7 @@ function fetchStats(){
   max.textContent = '—';
   list.innerHTML = '<span class="player-empty">Checking...</span>';
 
-  fetch('https://api.mcstatus.io/v2/status/java/spicraft.funserver.top')
+  fetch('https://api.mcstatus.io/v2/status/java/play.spicraft.2bd.net:25627')
     .then(r => r.json())
     .then(data => {
       if(data.online){
